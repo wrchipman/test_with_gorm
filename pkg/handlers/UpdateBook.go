@@ -2,17 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-	"testwithgorm/pkg/mocks"
 	"testwithgorm/pkg/models"
 
 	"github.com/gorilla/mux"
 )
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ :=strconv.Atoi(vars["id"])
 
@@ -26,19 +26,19 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	var updatedBook models.Book
 	json.Unmarshal(body, &updatedBook)
 
-	for index, book := range mocks.Books {
-		if book.Id == id {
-			book.Title = updatedBook.Title
-			book.Author = updatedBook.Author
-			book.Desc = updatedBook.Desc
+	var book models.Book
 
-			mocks.Books[index] = book
-
-			w.WriteHeader(http.StatusOK)
-			w.Header().Add("Content-Type", "application/json")
-			json.NewEncoder(w).Encode("Updated")
-			break
-		}
+	if result := h.DB.Find(&book, id); result.Error != nil {
+		fmt.Println(result.Error)
 	}
+	book.Title = updatedBook.Title
+	book.Author = updatedBook.Author
+	book.Desc = updatedBook.Desc
 
+	h.DB.Save(&book)
+			
+		
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode("Updated")
 }

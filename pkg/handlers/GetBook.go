@@ -2,24 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
-	"testwithgorm/pkg/mocks"
+	"testwithgorm/pkg/models"
 
 	"github.com/gorilla/mux"
 )
 
-func GetBook(w http.ResponseWriter, r *http.Request){
+func (h handler) GetBook(w http.ResponseWriter, r *http.Request){
 	vars := mux.Vars(r)
 	
 	id, _ := strconv.Atoi(vars["id"])
 	
-	for _, book := range mocks.Books {
-		if book.Id == id {
-			w.WriteHeader(http.StatusOK)
-			w.Header().Add("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(book)
-			break
-		}
-	} 
+	var book []models.Book
+
+	if result := h.DB.Find(&book, id); result.Error != nil {
+		fmt.Println(result.Error)
+	}
+	
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(book)
 }
